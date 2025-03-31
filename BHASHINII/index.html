@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BHĀṢINĪ LLM: English ↔ Hindi Translator</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fa; /* Soft light background */
+            color: #333; /* Dark text for readability */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            padding: 30px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #2c3e50; /* Deep blue heading */
+        }
+
+        select, button, textarea {
+            padding: 12px 18px;
+            font-size: 1em;
+            margin: 10px;
+            border-radius: 8px;
+            border: none;
+            transition: all 0.3s ease;
+            width: 90%;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        select {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        textarea {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            resize: none;
+        }
+
+        .section {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #transcript, #output {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: 10px;
+        }
+
+        #transcript {
+            color: #1abc9c;
+        }
+
+        #output {
+            color: #8e44ad;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+    </style>
+    <script>
+        function startRecognition() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            const lang = document.getElementById('langSelector').value;
+            recognition.lang = lang;
+            recognition.start();
+
+            recognition.onresult = function (event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('transcript').textContent = `Recognized: ${transcript}`;
+                translateText(transcript);
+            };
+
+            recognition.onerror = function (event) {
+                document.getElementById('output').textContent = `Error: ${event.error}`;
+            };
+        }
+
+        function translateText(text) {
+            const lang = document.getElementById('langSelector').value;
+            let apiUrl = '';
+            if (lang === 'en-US') {
+                apiUrl = `http://127.0.0.1:8000/translate/en-hi?text=${encodeURIComponent(text)}`;
+            } else if (lang === 'hi-IN') {
+                apiUrl = `http://127.0.0.1:8000/translate/hi-en?text=${encodeURIComponent(text)}`;
+            }
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const translatedText = lang === 'en-US' ? `Hindi: ${data.hindi}` : `English: ${data.english}`;
+                    document.getElementById('output').textContent = translatedText;
+                })
+                .catch(error => {
+                    document.getElementById('output').textContent = `Error: ${error.message}`;
+                });
+        }
+
+        function handleTextInput() {
+            const text = document.getElementById('manualInput').value;
+            translateText(text);
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>BHĀṢINĪ LLM: English ↔ Hindi Translator</h1>
+
+        <div class="section">
+            <label for="langSelector">Choose Language:</label>
+            <select id="langSelector">
+                <option value="en-US">English</option>
+                <option value="hi-IN">Hindi</option>
+            </select>
+        </div>
+
+        <div class="section">
+            <button onclick="startRecognition()">🎤 Speak & Translate</button>
+            <p id="transcript">Your speech will appear here.</p>
+        </div>
+
+        <div class="section">
+            <textarea id="manualInput" rows="4" placeholder="Or type your text here..."></textarea>
+            <button onclick="handleTextInput()">📝 Translate Text</button>
+        </div>
+
+        <div class="section">
+            <p id="output">Translation will appear here.</p>
+        </div>
+    </div>
+    
+    <div class="footer">Developed With Passion! ❤️</div>
+</body>
+</html>
